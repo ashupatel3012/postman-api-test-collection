@@ -1,0 +1,16 @@
+{
+  "id": "env-production",
+  "name": "Production",
+  "values": [
+    { "key": "base_url",        "value": "https://api.example.com",        "enabled": true },
+    { "key": "api_key",         "value": "your-prod-api-key-here",          "enabled": true },
+    { "key": "bearer_token",    "value": "your-prod-bearer-token-here",     "enabled": true },
+    { "key": "read_only_token", "value": "your-prod-read-only-token-here",  "enabled": true },
+    { "key": "basic_username",  "value": "prod_user",                       "enabled": true },
+    { "key": "basic_password",  "value": "prod_password",                   "enabled": true },
+    { "key": "user_id",         "value": "1001",                            "enabled": true },
+    { "key": "record_id",       "value": "5001",                            "enabled": true }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2024-01-01T00:00:00.000Z"
+}
