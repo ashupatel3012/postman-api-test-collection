@@ -168,9 +168,3 @@ pm.test("Email field is present and valid", function () {
 - Regression test API endpoints after product releases
 - Reproduce and document client-reported API issues
 - Share test suites with dev teams as part of bug reports
-
----
-
-## 📜 License
-
-MIT License — free to use and adapt.
