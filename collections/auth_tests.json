@@ -1,1 +1,228 @@
-
+{
+  "info": {
+    "name": "Authentication Tests",
+    "description": "Test cases covering API Key, Bearer Token, and Basic Auth scenarios. Run these to validate authentication is working correctly on any REST API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "API Key — Valid Key",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "x-api-key", "value": "{{api_key}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/profile",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "profile"]
+        },
+        "description": "Sends a valid API key and expects a 200 OK response."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response time is under 1000ms', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+              "});",
+              "",
+              "pm.test('Response is JSON', function () {",
+              "    pm.response.to.be.json;",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "API Key — Invalid Key",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "x-api-key", "value": "invalid-key-12345" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/profile",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "profile"]
+        },
+        "description": "Sends an invalid API key. Expects 401 Unauthorized."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 401 Unauthorized', function () {",
+              "    pm.response.to.have.status(401);",
+              "});",
+              "",
+              "pm.test('Error message is present', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.have.property('error');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "API Key — Missing Key",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/profile",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "profile"]
+        },
+        "description": "Sends request with no API key. Expects 401 or 403."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 401 or 403', function () {",
+              "    pm.expect([401, 403]).to.include(pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bearer Token — Valid Token",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{bearer_token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/users/me",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "users", "me"]
+        },
+        "description": "Uses a valid Bearer token. Expects 200 with user data."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response contains user data', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.have.property('id');",
+              "    pm.expect(json).to.have.property('email');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bearer Token — Expired Token",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer expired.token.value" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/users/me",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "users", "me"]
+        },
+        "description": "Uses an expired Bearer token. Expects 401 with token error."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 401', function () {",
+              "    pm.response.to.have.status(401);",
+              "});",
+              "",
+              "pm.test('Error indicates token issue', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.error).to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Basic Auth — Valid Credentials",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{basic_username}}" },
+            { "key": "password", "value": "{{basic_password}}" }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/secure",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "secure"]
+        },
+        "description": "Uses valid Basic Auth credentials. Expects 200."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Basic Auth — Wrong Password",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{basic_username}}" },
+            { "key": "password", "value": "wrongpassword" }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/secure",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "secure"]
+        },
+        "description": "Uses wrong password in Basic Auth. Expects 401."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 401', function () {",
+              "    pm.response.to.have.status(401);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
