@@ -1,0 +1,320 @@
+{
+  "info": {
+    "name": "CRUD Operation Tests",
+    "description": "Test cases for GET, POST, PUT, PATCH, and DELETE operations. Validates correct status codes, response structure, and data integrity.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "GET — All Records",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{bearer_token}}" }],
+        "url": {
+          "raw": "{{base_url}}/api/v1/records",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "records"]
+        },
+        "description": "Fetch all records. Expects 200 and an array response."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response is an array', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Response time is under 2000ms', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET — Single Record (Valid ID)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{bearer_token}}" }],
+        "url": {
+          "raw": "{{base_url}}/api/v1/records/{{record_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "records", "{{record_id}}"]
+        },
+        "description": "Fetch a single record by ID. Expects 200 and correct record."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Record ID matches requested ID', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(String(json.id)).to.eql(pm.environment.get('record_id'));",
+              "});",
+              "",
+              "pm.test('Required fields are present', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.have.property('id');",
+              "    pm.expect(json).to.have.property('name');",
+              "    pm.expect(json).to.have.property('created_at');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET — Non-Existent Record (404)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{bearer_token}}" }],
+        "url": {
+          "raw": "{{base_url}}/api/v1/records/999999999",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "records", "999999999"]
+        },
+        "description": "Request a record that does not exist. Expects 404."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 404', function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "",
+              "pm.test('Error message is returned', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.have.property('error');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST — Create Record (Valid Payload)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{bearer_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test Record\",\n  \"description\": \"Created via Postman test\",\n  \"status\": \"active\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/records",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "records"]
+        },
+        "description": "Create a new record with a valid payload. Expects 201 and the created object."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('Response contains new record ID', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.have.property('id');",
+              "    // Save for use in subsequent tests",
+              "    pm.environment.set('new_record_id', json.id);",
+              "});",
+              "",
+              "pm.test('Name matches submitted value', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.name).to.eql('Test Record');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST — Create Record (Missing Required Field)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{bearer_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"description\": \"Missing name field intentionally\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/records",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "records"]
+        },
+        "description": "Submit a payload missing the required 'name' field. Expects 400."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 400 Bad Request', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test('Validation error message returned', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.have.property('error');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUT — Full Update",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{bearer_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Updated Record Name\",\n  \"description\": \"Fully updated via PUT\",\n  \"status\": \"inactive\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/records/{{record_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "records", "{{record_id}}"]
+        },
+        "description": "Fully replace a record with new data. Expects 200 and updated values."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Name was updated correctly', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.name).to.eql('Updated Record Name');",
+              "});",
+              "",
+              "pm.test('Status was updated correctly', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.status).to.eql('inactive');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PATCH — Partial Update",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{bearer_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"active\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/records/{{record_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "records", "{{record_id}}"]
+        },
+        "description": "Update only the status field. Expects 200 and only the patched field changed."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Status field was updated', function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.status).to.eql('active');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DELETE — Valid Record",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Authorization", "value": "Bearer {{bearer_token}}" }],
+        "url": {
+          "raw": "{{base_url}}/api/v1/records/{{record_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "records", "{{record_id}}"]
+        },
+        "description": "Delete an existing record. Expects 200 or 204."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 204', function () {",
+              "    pm.expect([200, 204]).to.include(pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DELETE — Already Deleted Record",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Authorization", "value": "Bearer {{bearer_token}}" }],
+        "url": {
+          "raw": "{{base_url}}/api/v1/records/{{record_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "records", "{{record_id}}"]
+        },
+        "description": "Attempt to delete a record that no longer exists. Expects 404."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 404', function () {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
